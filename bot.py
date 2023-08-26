@@ -1,7 +1,10 @@
 import asyncio
 from os import environ
 from pyrogram import Client, filters, idle
+from aiohttp import web
+from webcode import web_server
 
+PORT = environ.get("PORT", "8080")
 API_ID = int(environ.get("API_ID"))
 API_HASH = environ.get("API_HASH")
 BOT_TOKEN = environ.get("BOT_TOKEN")
@@ -25,13 +28,27 @@ User = Client(name="user-account",
               )
 
 
-Bot = Client(name="auto-delete",
+class Bot(Client):
+
+    def __init__(self):
+        super().__init__(
+             name="auto-delete",
              api_id=API_ID,
              api_hash=API_HASH,
              bot_token=BOT_TOKEN,
              workers=300
              )
+    async def start(self):
+        await super().start()
+        print("Bot oombi!")
+        app = web.AppRunner(await web_server())
+        await app.setup()
+        bind_address = "0.0.0.0"
+        await web.TCPSite(app, bind_address, PORT).start()
 
+    async def stop(self, *args):
+        await super().stop()
+        logging.info("Bot stopped. Bye.")
 
 @Bot.on_message(filters.command('start') & filters.private)
 async def start(bot, message):
@@ -50,12 +67,10 @@ async def delete(user, message):
        
 User.start()
 print("User oombi!")
-Bot.start()
-print("Bot oombi!")
 
-idle()
+app = Bot()
+app.run()
 
 User.stop()
 print("User Stopped!")
-Bot.stop()
-print("Bot Stopped!")
+
