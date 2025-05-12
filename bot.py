@@ -4,6 +4,7 @@ from os import environ
 from pyrogram import Client, filters, idle
 from aiohttp import web
 from webcode import web_server
+logging.getLogger("asyncio").setLevel(logging.CRITICAL -1)
 
 PORT = environ.get("PORT", "8080")
 API_ID = int(environ.get("API_ID"))
