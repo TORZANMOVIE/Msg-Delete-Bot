@@ -2,8 +2,12 @@ import asyncio
 import logging
 from os import environ
 from pyrogram import Client, filters, idle
+from pyrogram import utils as pyroutils
+
+pyroutils.MIN_CHAT_ID = -999999999999
+pyroutils.MIN_CHANNEL_ID = -100999999999999
 from aiohttp import web
-from webcode import web_server
+from webcode import web_server  
 logging.getLogger("asyncio").setLevel(logging.CRITICAL -1)
 
 PORT = environ.get("PORT", "8080")
