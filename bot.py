@@ -40,18 +40,15 @@ Bot = Client(
 )
 
 # ➤ /start handler for bot
-
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
-    print("Start command received")
-    buttons = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Join Support", url="https://t.me/CinemaXpressGroup")]]
-    )
-    await message.reply(
-        START_MSG.format(message.from_user.mention),
-        reply_markup=buttons
-    )
-
+    buttons = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Join Support", url="https://t.me/CinemaXpressGroup")]]
+    )
+    await message.reply(
+        START_MSG.format(message.from_user.mention),
+        reply_markup=buttons
+    )
 
 # ➤ Auto-delete handler in groups
 @User.on_message(filters.chat(GROUPS))
@@ -68,6 +65,9 @@ async def auto_delete(user, message):
 async def main():
     await User.start()
     await Bot.start()
+
+    me = await Bot.get_me()
+    print(f"Bot started as @{me.username}")
     print("Both User and Bot started!")
 
     # Start aiohttp web server for health check
@@ -84,6 +84,3 @@ async def main():
 
 # Start everything
 asyncio.run(main())
-
-me = await Bot.get_me()
-print(f"Bot started as @{me.username}")
