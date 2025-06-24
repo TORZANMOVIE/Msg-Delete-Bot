@@ -26,14 +26,12 @@ for usr in environ.get("ADMINS").split():
 
 START_MSG = "<b>Hai {},\nI'm a private bot of @CinemaxpressTM to delete group messages after a specific time</b>"
 
-
 User = Client(name="user-account",
               session_string=SESSION,
               api_id=API_ID,
               api_hash=API_HASH,
               workers=300
               )
-
 
 Bot = Client(name="auto-delete",
              api_id=API_ID,
@@ -63,11 +61,22 @@ async def delete(user, message):
           await Bot.delete_messages(message.chat.id, message.id)
     except Exception as e:
        print(e)
-       
+
 User.start()
 print("User oombi 🖕🏿")
 Bot.start()
 print("Bot oombi 🖕🏿")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━ Koyeb Health Check ━━━━━━━━━━━━━━━━━━━━━━━━
+async def run_health_server():
+    app = web.AppRunner(await web_server())
+    await app.setup()
+    await web.TCPSite(app, "0.0.0.0", int(PORT)).start()
+    print(f"🌐 Health check server running on port {PORT}")
+
+loop = asyncio.get_event_loop()
+loop.create_task(run_health_server())
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 idle()
 
