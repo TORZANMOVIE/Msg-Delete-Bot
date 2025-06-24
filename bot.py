@@ -6,6 +6,7 @@ from pyrogram import utils as pyroutils
 from aiohttp import web
 from webcode import web_server
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import time as t  # Alias to avoid confusion with TIME var
 
 pyroutils.MIN_CHAT_ID = -999999999999
 pyroutils.MIN_CHANNEL_ID = -100999999999999
@@ -26,20 +27,24 @@ for usr in environ.get("ADMINS").split():
 
 START_MSG = "<b>Hai {},\nI'm a private bot of Cinemaxpress to delete group messages after a specific time</b>"
 
-User = Client(name="user-account",
-              session_string=SESSION,
-              api_id=API_ID,
-              api_hash=API_HASH,
-              workers=300
-              )
+# In-memory store of messages
+messages_to_delete = []
 
-Bot = Client(name="auto-delete",
-             api_id=API_ID,
-             api_hash=API_HASH,
-             bot_token=BOT_TOKEN,
-             workers=300
-             )
+User = Client(
+    name="user-account",
+    session_string=SESSION,
+    api_id=API_ID,
+    api_hash=API_HASH,
+    workers=300
+)
 
+Bot = Client(
+    name="auto-delete",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN,
+    workers=300
+)
 
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
@@ -54,33 +59,50 @@ async def start(bot, message):
 @User.on_message(filters.chat(GROUPS))
 async def delete(user, message):
     try:
-       if message.from_user.id in ADMINS:
-          return
-       else:
-          await asyncio.sleep(TIME)
-          await Bot.delete_messages(message.chat.id, message.id)
+        if message.from_user.id in ADMINS:
+            return
+        messages_to_delete.append({
+            "chat_id": message.chat.id,
+            "message_id": message.id,
+            "timestamp": t.time()
+        })
     except Exception as e:
-       print(e)
+        print(e)
 
-User.start()
-print("User oombi 🖕🏿")
-Bot.start()
-print("Bot oombi 🖕🏿")
+# ━━━━━━━━━━━━━━━━ Background Deletion Loop ━━━━━━━━━━━━━━━━
+async def background_cleaner():
+    while True:
+        now = t.time()
+        for msg in messages_to_delete[:]:  # Copy for safe removal
+            if now - msg["timestamp"] >= TIME:
+                try:
+                    await Bot.delete_messages(msg["chat_id"], msg["message_id"])
+                except Exception as e:
+                    print(f"Failed to delete: {e}")
+                messages_to_delete.remove(msg)
+        await asyncio.sleep(5)  # Check every 5 seconds
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━ Koyeb Health Check ━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━ Koyeb Health Check ━━━━━━━━━━━━━━━━
 async def run_health_server():
     app = web.AppRunner(await web_server())
     await app.setup()
     await web.TCPSite(app, "0.0.0.0", int(PORT)).start()
     print(f"🌐 Health check server running on port {PORT}")
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-loop = asyncio.get_event_loop()
-loop.create_task(run_health_server())
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━ Main Run ━━━━━━━━━━━━━━━━
+async def main():
+    await User.start()
+    print("User oombi 🖕🏿")
+    await Bot.start()
+    print("Bot oombi 🖕🏿")
+    await run_health_server()
+    asyncio.create_task(background_cleaner())
+    await idle()
+    await Bot.stop()
+    print("Bot Stopped!😤")
+    await User.stop()
+    print("User Stopped!😑")
 
-idle()
-
-User.stop()
-print("User Stopped!😑")
-Bot.stop()
-print("Bot Stopped!😤")
+asyncio.run(main())
