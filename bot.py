@@ -45,7 +45,13 @@ Bot = Client(name="auto-delete",
 
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
-    await message.reply("Hi, I'm alive!")
+    buttons = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Join Support", url="https://t.me/CinemaXpressGroup")]]
+    )
+    await message.reply(
+        START_MSG.format(message.from_user.mention),
+        reply_markup=buttons
+    )
 
 @User.on_message(filters.chat(GROUPS))
 async def delete(user, message):
@@ -68,4 +74,4 @@ idle()
 User.stop()
 print("User Stopped!😑")
 Bot.stop()
-print("Bot Stopped!🥵")
+print("Bot Stopped!😤")
