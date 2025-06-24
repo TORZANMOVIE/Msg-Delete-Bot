@@ -17,70 +17,55 @@ API_HASH = environ.get("API_HASH")
 BOT_TOKEN = environ.get("BOT_TOKEN")
 SESSION = environ.get("SESSION")
 TIME = int(environ.get("TIME"))
+GROUPS = []
+for grp in environ.get("GROUPS").split():
+    GROUPS.append(int(grp))
+ADMINS = []
+for usr in environ.get("ADMINS").split():
+    ADMINS.append(int(usr))
 
-GROUPS = [int(x) for x in environ.get("GROUPS").split()]
-ADMINS = [int(x) for x in environ.get("ADMINS").split()]
+START_MSG = "<b>Hai {},\nI'm a private bot of @CinemaxpressTM to delete group messages after a specific time</b>"
 
-START_MSG = "<b>Hai {},\nI'm a private bot of @cinemabasar to delete group messages after a specific time</b>"
 
-User = Client(
-    name="user-account",
-    session_string=SESSION,
-    api_id=API_ID,
-    api_hash=API_HASH,
-    workers=300
-)
+User = Client(name="user-account",
+              session_string=SESSION,
+              api_id=API_ID,
+              api_hash=API_HASH,
+              workers=300
+              )
 
-Bot = Client(
-    name="auto-delete",
-    bot_token=BOT_TOKEN,
-    api_id=API_ID,
-    api_hash=API_HASH,
-    workers=300
-)
 
-# ➤ /start handler for bot
+Bot = Client(name="auto-delete",
+             api_id=API_ID,
+             api_hash=API_HASH,
+             bot_token=BOT_TOKEN,
+             workers=300
+             )
+
+
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
-    buttons = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Join Support", url="https://t.me/CinemaXpressGroup")]]
-    )
-    await message.reply(
-        START_MSG.format(message.from_user.mention),
-        reply_markup=buttons
-    )
+    await message.reply("Hi, I'm alive!")
 
-# ➤ Auto-delete handler in groups
 @User.on_message(filters.chat(GROUPS))
-async def auto_delete(user, message):
+async def delete(user, message):
     try:
-        if message.from_user.id in ADMINS:
-            return
-        await asyncio.sleep(TIME)
-        await user.delete_messages(chat_id=message.chat.id, message_ids=message.id)
+       if message.from_user.id in ADMINS:
+          return
+       else:
+          await asyncio.sleep(TIME)
+          await Bot.delete_messages(message.chat.id, message.id)
     except Exception as e:
-        print(e)
+       print(e)
+       
+User.start()
+print("User oombi 🖕🏿")
+Bot.start()
+print("Bot oombi 🖕🏿")
 
-# ➤ Main runner
-async def main():
-    await User.start()
-    await Bot.start()
+idle()
 
-    me = await Bot.get_me()
-    print(f"Bot started as @{me.username}")
-    print("Both User and Bot started!")
-
-    # Start aiohttp web server for health check
-    app = web.AppRunner(await web_server())
-    await app.setup()
-    await web.TCPSite(app, "0.0.0.0", int(PORT)).start()
-
-    # Keep running until interrupted
-    await asyncio.get_event_loop().create_future()
-
-    # Cleanup on exit
-    await Bot.stop()
-    await User.stop()
-
-# Start everything
-asyncio.run(main())
+User.stop()
+print("User Stopped!😑")
+Bot.stop()
+print("Bot Stopped!🥵")
