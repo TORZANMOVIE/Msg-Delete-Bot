@@ -1,14 +1,15 @@
 import asyncio
 import logging
 from os import environ
-from pyrogram import Client, filters, idle
+from pyrogram import Client, filters
 from pyrogram import utils as pyroutils
+from aiohttp import web
+from webcode import web_server
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 pyroutils.MIN_CHAT_ID = -999999999999
 pyroutils.MIN_CHANNEL_ID = -100999999999999
-from aiohttp import web
-from webcode import web_server  
-logging.getLogger("asyncio").setLevel(logging.CRITICAL -1)
+logging.getLogger("asyncio").setLevel(logging.CRITICAL - 1)
 
 PORT = environ.get("PORT", "8080")
 API_ID = int(environ.get("API_ID"))
@@ -16,69 +17,61 @@ API_HASH = environ.get("API_HASH")
 BOT_TOKEN = environ.get("BOT_TOKEN")
 SESSION = environ.get("SESSION")
 TIME = int(environ.get("TIME"))
-GROUPS = []
-for grp in environ.get("GROUPS").split():
-    GROUPS.append(int(grp))
-ADMINS = []
-for usr in environ.get("ADMINS").split():
-    ADMINS.append(int(usr))
+
+GROUPS = [int(x) for x in environ.get("GROUPS").split()]
+ADMINS = [int(x) for x in environ.get("ADMINS").split()]
 
 START_MSG = "<b>Hai {},\nI'm a private bot of @cinemabasar to delete group messages after a specific time</b>"
 
+User = Client(
+    name="user-account",
+    session_string=SESSION,
+    api_id=API_ID,
+    api_hash=API_HASH,
+    workers=300
+)
 
-User = Client(name="user-account",
-              session_string=SESSION,
-              api_id=API_ID,
-              api_hash=API_HASH,
-              workers=300
-              )
+Bot = Client(
+    name="auto-delete",
+    bot_token=BOT_TOKEN,
+    api_id=API_ID,
+    api_hash=API_HASH,
+    workers=300
+)
 
-
-class Bot(Client):
-
-    def __init__(self):
-        super().__init__(
-             name="auto-delete",
-             api_id=API_ID,
-             api_hash=API_HASH,
-             bot_token=BOT_TOKEN,
-             workers=300
-             )
-    async def start(self):
-        await super().start()
-        print("Bot oombi!")
-        app = web.AppRunner(await web_server())
-        await app.setup()
-        bind_address = "0.0.0.0"
-        await web.TCPSite(app, bind_address, PORT).start()
-
-    async def stop(self, *args):
-        await super().stop()
-        logging.info("Bot stopped. Bye.")
-
+# ➤ /start handler for bot
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
     await message.reply(START_MSG.format(message.from_user.mention))
 
+# ➤ Auto-delete handler in groups
 @User.on_message(filters.chat(GROUPS))
-async def delete(user, message):
-    chat = message.chat.id
-    m = message.id
+async def auto_delete(user, message):
     try:
-       if message.from_user.id in ADMINS:
-          return
-       else:
-          await asyncio.sleep(TIME)
-          await user.delete_messages(chat_id=chat, message_ids=m)
+        if message.from_user.id in ADMINS:
+            return
+        await asyncio.sleep(TIME)
+        await user.delete_messages(chat_id=message.chat.id, message_ids=message.id)
     except Exception as e:
-       print(e)
-       
-User.start()
-print("User oombi!")
+        print(e)
 
-app = Bot()
-app.run()
+# ➤ Main runner
+async def main():
+    await User.start()
+    await Bot.start()
+    print("Both User and Bot started!")
 
-User.stop()
-print("User Stopped!")
+    # Start aiohttp web server for health check
+    app = web.AppRunner(await web_server())
+    await app.setup()
+    await web.TCPSite(app, "0.0.0.0", int(PORT)).start()
 
+    # Keep running until interrupted
+    await asyncio.get_event_loop().create_future()
+
+    # Cleanup on exit
+    await Bot.stop()
+    await User.stop()
+
+# Start everything
+asyncio.run(main())
