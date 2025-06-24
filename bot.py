@@ -56,7 +56,7 @@ class Bot(Client):
         await super().stop()
         logging.info("Bot stopped. Bye.")
 
-@Bot.on_message(filters.command('start') & filters.private)
+@Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
     await message.reply(START_MSG.format(message.from_user.mention))
 
