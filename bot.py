@@ -24,7 +24,7 @@ ADMINS = []
 for usr in environ.get("ADMINS").split():
     ADMINS.append(int(usr))
 
-START_MSG = "<b>Hai {},\nI'm a private bot of @CinemaxpressTM to delete group messages after a specific time</b>"
+START_MSG = "<b>Hai {},\nI'm a private bot of Cinemaxpress to delete group messages after a specific time</b>"
 
 User = Client(name="user-account",
               session_string=SESSION,
@@ -44,7 +44,7 @@ Bot = Client(name="auto-delete",
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
     buttons = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Join Support", url="https://t.me/CinemaXpressGroup")]]
+        [[InlineKeyboardButton("📈 ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ 📈", url="https://t.me/CinemaxTG")]]
     )
     await message.reply(
         START_MSG.format(message.from_user.mention),
