@@ -40,9 +40,16 @@ Bot = Client(
 )
 
 # ➤ /start handler for bot
+
 @Bot.on_message(filters.command("start") & filters.private)
 async def start(bot, message):
-    await message.reply(START_MSG.format(message.from_user.mention))
+    buttons = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("Join Support", url="https://t.me/CinemaXpressGroup")]]
+    )
+    await message.reply(
+        START_MSG.format(message.from_user.mention),
+        reply_markup=buttons
+    )
 
 # ➤ Auto-delete handler in groups
 @User.on_message(filters.chat(GROUPS))
