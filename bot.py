@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from os import environ
-from pyrogram import Client, filters
+from pyrogram import Client, filters, idle
 from pyrogram import utils as pyroutils
 from aiohttp import web
 from webcode import web_server
