@@ -1,86 +1,55 @@
+import os
 import asyncio
-import logging
-from os import environ
-from pyrogram import Client, filters, idle
-from pyrogram import utils as pyroutils
-from aiohttp import web
-from webcode import web_server
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from dotenv import load_dotenv
+from pyrogram import Client, filters
+from pyrogram.errors import FloodWait
+from pyrogram.types import Message
+from pyrogram.idle import idle
 
-pyroutils.MIN_CHAT_ID = -999999999999
-pyroutils.MIN_CHANNEL_ID = -100999999999999
-logging.getLogger("asyncio").setLevel(logging.CRITICAL - 1)
+# Load environment variables from .env file
+load_dotenv()
 
-PORT = environ.get("PORT", "8080")
-API_ID = int(environ.get("API_ID"))
-API_HASH = environ.get("API_HASH")
-BOT_TOKEN = environ.get("BOT_TOKEN")
-SESSION = environ.get("SESSION")
-TIME = int(environ.get("TIME"))
-GROUPS = []
-for grp in environ.get("GROUPS").split():
-    GROUPS.append(int(grp))
-ADMINS = []
-for usr in environ.get("ADMINS").split():
-    ADMINS.append(int(usr))
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+SESSION_STRING = os.getenv("SESSION_STRING")
+GROUPS = list(map(int, os.getenv("GROUPS", "").split()))
+TIME = int(os.getenv("TIME", "10"))
 
-START_MSG = "<b>Hai {},\nI'm a private bot of Cinemaxpress to delete group messages after a specific time</b>"
+# Initialize bot client (for user messages)
+bot = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-User = Client(name="user-account",
-              session_string=SESSION,
-              api_id=API_ID,
-              api_hash=API_HASH,
-              workers=300
-              )
+# Initialize user client (to delete messages from other bots)
+user = Client("user", session_string=SESSION_STRING, api_id=API_ID, api_hash=API_HASH)
 
-Bot = Client(name="auto-delete",
-             api_id=API_ID,
-             api_hash=API_HASH,
-             bot_token=BOT_TOKEN,
-             workers=300
-             )
+# Handler for messages sent by users (deleted by bot)
+@bot.on_message(filters.group & filters.text)
+async def delete_user_messages(_, message: Message):
+    if message.chat.id in GROUPS and not message.from_user.is_bot:
+        await asyncio.sleep(TIME)
+        try:
+            await message.delete()
+        except Exception as e:
+            print(f"❌ Failed to delete user message: {e}")
 
-
-@Bot.on_message(filters.command("start") & filters.private)
-async def start(bot, message):
-    buttons = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("📈 ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ 📈", url="https://t.me/CinemaxTG")]]
-    )
-    await message.reply(
-        START_MSG.format(message.from_user.mention),
-        reply_markup=buttons
-    )
-
-@User.on_message(filters.chat(GROUPS))
-async def delete(user, message):
-    try:
-       if message.from_user.id in ADMINS:
-          return
-       else:
-          await asyncio.sleep(TIME)
-          await Bot.delete_messages(message.chat.id, message.id)
-    except Exception as e:
-       print(e)
+# Handler for messages sent by bots (deleted by user session)
+@user.on_message(filters.group & filters.text)
+async def delete_bot_messages(_, message: Message):
+    if message.chat.id in GROUPS and message.from_user and message.from_user.is_bot:
+        await asyncio.sleep(TIME)
+        try:
+            await message.delete()
+        except Exception as e:
+            print(f"❌ Failed to delete bot message: {e}")
 
 User.start()
 print("User oombi 🖕🏿")
 Bot.start()
 print("Bot oombi 🖕🏿")
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━ Koyeb Health Check ━━━━━━━━━━━━━━━━━━━━━━━━
-async def run_health_server():
-    app = web.AppRunner(await web_server())
-    await app.setup()
-    await web.TCPSite(app, "0.0.0.0", int(PORT)).start()
-    print(f"🌐 Health check server running on port {PORT}")
-
-loop = asyncio.get_event_loop()
-loop.create_task(run_health_server())
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 idle()
 
 User.stop()
 print("User Stopped!😑")
 Bot.stop()
-print("Bot Stopped!😤")
+print("Bot Stopped!😤")    
