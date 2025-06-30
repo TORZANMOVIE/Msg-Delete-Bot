@@ -41,6 +41,15 @@ async def delete_bot_messages(_, message: Message):
             await message.delete()
         except Exception as e:
             print(f"❌ Failed to delete bot message: {e}")
+            
+@bot.on_message(filters.command("start") & filters.private)
+async def start_command(client, message: Message):
+    await message.reply_text(
+        "👋 Hello! I’m your Auto-Delete Bot.\n\n"
+        "➤ Add me to your group and make me admin.\n"
+        "➤ I will automatically delete messages after a delay."
+       
+    )           
 
 User.start()
 print("User oombi 🖕🏿")
