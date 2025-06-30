@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 from pyrogram.types import Message
-from pyrogram.idle import idle
 
 # Load environment variables from .env file
 load_dotenv()
