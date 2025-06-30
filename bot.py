@@ -50,14 +50,14 @@ async def start_command(client, message: Message):
        
     )           
 
-User.start()
+user.start()
 print("User oombi 🖕🏿")
-Bot.start()
+bot.start()
 print("Bot oombi 🖕🏿")
 
 idle()
 
-User.stop()
+user.stop()
 print("User Stopped!😑")
-Bot.stop()
+bot.stop()
 print("Bot Stopped!😤")    
