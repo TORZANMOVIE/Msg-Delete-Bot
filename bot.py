@@ -12,10 +12,10 @@ BOT_TOKEN = environ.get("BOT_TOKEN")
 SESSION = environ.get("SESSION")
 TIME = int(30)
 GROUPS = []
-for grp in environ.get("GROUPS").split():
+for grp in environ.get("-1002480654065 -1002031758791 -1002259621643 -1002592745366").split():
     GROUPS.append(int(grp))
 ADMINS = []
-for usr in environ.get("ADMINS").split():
+for usr in environ.get("1355140465").split():
     ADMINS.append(int(usr))
 
 START_MSG = "<b>Hai {},\nI'm a private bot of @Freekzz_Botz \nUsed For Deleting Messages After Specific Time. \nContact @Freekzz_2008 To Gain Access.</b>"
