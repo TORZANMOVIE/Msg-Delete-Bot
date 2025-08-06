@@ -6,7 +6,7 @@ from pyrogram import utils as pyroutils
 pyroutils.MIN_CHAT_ID = -999999999999
 pyroutils.MIN_CHANNEL_ID = -100999999999999
 
-API_ID = int(environ.get("API_ID"))
+API_ID = int(environ.get("27269324"))
 API_HASH = environ.get("API_HASH")
 BOT_TOKEN = environ.get("BOT_TOKEN")
 SESSION = environ.get("SESSION")
